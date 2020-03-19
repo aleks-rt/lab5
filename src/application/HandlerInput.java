@@ -1,11 +1,8 @@
 package application;
 
-import javafx.util.Pair;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Stack;
 
 /**
@@ -13,30 +10,30 @@ import java.util.Stack;
  */
 public class HandlerInput {
     private BufferedReader bufferedReader;
-    private Stack<Pair<String, InputStream>> inputStreamStack;
+    private Stack<NamedInputStream> inputStreamStack;
     private HashSet<String> paths;
 
     public HandlerInput() throws IOException{
         inputStreamStack = new Stack<>();
         paths = new HashSet<>();
-        pushInputStream(new Pair<String, InputStream>(null, System.in));
+        pushInputStream(new NamedInputStream(null, System.in));
     }
 
     /**
      * Метод, который добавляет новый ImputStream в Stack и открывает его
      */
-    private void pushInputStream(Pair<String, InputStream> inputStream) throws IOException {
+    private void pushInputStream(NamedInputStream inputStream) throws IOException {
         inputStreamStack.push(inputStream);
-        bufferedReader = new BufferedReader(new InputStreamReader(inputStreamStack.peek().getValue()));
+        bufferedReader = new BufferedReader(new InputStreamReader(inputStreamStack.peek().getInputStream()));
     }
 
     /**
      * Метод, который убирает отработанный ImputStream из Stack и открывает следующий
      */
     private void popInputStream() throws IOException{
-        paths.remove(inputStreamStack.peek().getKey());
+        paths.remove(inputStreamStack.peek().getName());
         inputStreamStack.pop();
-        bufferedReader = new BufferedReader(new InputStreamReader(inputStreamStack.peek().getValue()));
+        bufferedReader = new BufferedReader(new InputStreamReader(inputStreamStack.peek().getInputStream()));
     }
 
     /**
@@ -47,7 +44,7 @@ public class HandlerInput {
         if (paths.contains(path)) {
             throw new IOException("Вы вызываете команду, из-за которого произойдет рекурсия! Остановка программы!");
         }
-        pushInputStream(new Pair<String, InputStream>(path, new FileInputStream(path)));
+        pushInputStream(new NamedInputStream(path, new FileInputStream(path)));
         paths.add(path);
     }
 
@@ -77,7 +74,7 @@ public class HandlerInput {
         }
         else {
             data = null;
-            if(inputStreamStack.peek().getKey() != null) {
+            if(inputStreamStack.size() > 1) {
                 popInputStream();
             }
         }
